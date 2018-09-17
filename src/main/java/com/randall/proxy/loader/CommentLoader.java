@@ -1,6 +1,7 @@
 package com.randall.proxy.loader;
 
 import com.google.common.base.Preconditions;
+import com.randall.proxy.constant.HttpConfig;
 import com.randall.proxy.dao.CommentDao;
 import com.randall.proxy.dao.ProxyDao;
 import com.randall.proxy.dao.SongDao;
@@ -17,6 +18,7 @@ import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import retrofit2.Response;
 
@@ -43,8 +45,6 @@ public class CommentLoader {
     private static Pattern DESCRIPTION_PATTERN = Pattern.compile("<meta name=\"description\" content=\"(.*)\" />");
     private static Pattern IMAGE_PATTERN = Pattern.compile("<meta property=\"og:image\" content=\"(.*)\" />");
 
-    public static final int LOAD_TIMEOUT_SECOND = 15;
-
     @Resource
     private SongDao songDao;
 
@@ -56,6 +56,9 @@ public class CommentLoader {
 
     @Resource
     private ProxyDao proxyDao;
+    
+    @Autowired
+    private HttpConfig httpConfig;
 
     /**
      * 获取歌曲和评论信息
@@ -66,16 +69,16 @@ public class CommentLoader {
     public void loadSongs(int start, int end) throws Exception {
         for(int songId = start; songId <= end; songId++) {
             Proxy proxy = getRandomProxy();
-            Song songInfo = getSongInfo(songId, proxy, LOAD_TIMEOUT_SECOND);
+            Song songInfo = getSongInfo(songId, proxy, httpConfig.getSongLoadTimeout());
             if (songInfo == null) { // 重试一次
                 proxyDao.delete(proxy.getId());
                 proxy = getRandomProxy();
-                songInfo = getSongInfo(songId, proxy, LOAD_TIMEOUT_SECOND);
+                songInfo = getSongInfo(songId, proxy, httpConfig.getSongLoadTimeout());
             }
             if (songInfo == null) { // 重试一次
                 proxyDao.delete(proxy.getId());
                 proxy = getRandomProxy();
-                songInfo = getSongInfo(songId, proxy, LOAD_TIMEOUT_SECOND);
+                songInfo = getSongInfo(songId, proxy, httpConfig.getSongLoadTimeout());
             }
             if (songInfo == null) {
                 proxyDao.delete(proxy.getId());
@@ -137,7 +140,7 @@ public class CommentLoader {
         Long songId = song.getSongId();
         String params = "flQdEgSsTmFkRagRN2ceHMwk6lYVIMro5auxLK/JywlqdjeNvEtiWDhReFI+QymePGPLvPnIuVi3dfsDuqEJW204VdwvX+gr3uiRBeSFuOm1VUSJ1HqOc+nJCh0j6WGUbWuJC5GaHTEE4gcpWXX36P4Eu4djoQBzoqdsMbCwoolb2/WrYw/N2hehuwBHO4Oz";
         String encSecKey = "0263b1cd3b0a9b621a819b73e588e1cc5709349b21164dc45ab760e79858bb712986ea064dbfc41669e527b767f02da7511ac862cbc54ea7d164fc65e0359962273616e68e694453fb6820fa36dd9915b2b0f60dadb0a6022b2187b9ee011b35d82a1c0ed8ba0dceb877299eca944e80b1e74139f0191adf71ca536af7d7ec25";
-        Response<CommentResponseBody> response = HttpProxyClientFactory.musicClient(proxy, LOAD_TIMEOUT_SECOND).comment(songId, params, encSecKey).execute();
+        Response<CommentResponseBody> response = HttpProxyClientFactory.musicClient(proxy, httpConfig.getSongLoadTimeout()).comment(songId, params, encSecKey).execute();
         long commentCount = 0;
         if (response != null) {
             CommentResponseBody commentResponseBody = response.body();

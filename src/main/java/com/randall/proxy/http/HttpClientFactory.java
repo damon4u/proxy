@@ -3,8 +3,10 @@ package com.randall.proxy.http;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.randall.proxy.client.GitProxyClient;
+import com.randall.proxy.constant.HttpConfig;
 import lombok.Data;
 import okhttp3.OkHttpClient;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -23,15 +25,19 @@ import java.util.concurrent.TimeUnit;
 @Data
 public class HttpClientFactory {
     
-    @Value("${http.timeoutSeconds.load}")
-    private int loadTimeout;
-    
+    private final HttpConfig httpConfig;
+
+    @Autowired
+    public HttpClientFactory(HttpConfig httpConfig) {
+        this.httpConfig = httpConfig;
+    }
+
     @Bean
     public OkHttpClient okHttpClient() {
         return new OkHttpClient.Builder()
                 .addInterceptor(new HttpHeaderInterceptor())
-                .connectTimeout(loadTimeout, TimeUnit.SECONDS)
-                .readTimeout(loadTimeout, TimeUnit.SECONDS).build();
+                .connectTimeout(httpConfig.getProxyLoadTimeout(), TimeUnit.SECONDS)
+                .readTimeout(httpConfig.getProxyLoadTimeout(), TimeUnit.SECONDS).build();
     }
     
     @Bean

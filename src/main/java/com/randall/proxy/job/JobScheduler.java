@@ -31,7 +31,7 @@ public class JobScheduler {
 
     @Bean
     public Trigger proxyJobTrigger() {
-        CronScheduleBuilder scheduleBuilder = CronScheduleBuilder.cronSchedule("0 0/20 * * * ?");
+        CronScheduleBuilder scheduleBuilder = CronScheduleBuilder.cronSchedule("0 0/5 * * * ?");
         return TriggerBuilder.newTrigger()
                 .withSchedule(scheduleBuilder)
                 .withIdentity(JOB_NAME_PROXY_LOAD, GROUP_NAME_PROXY)
@@ -41,7 +41,7 @@ public class JobScheduler {
 
     @Bean
     public JobDetail proxyValidateJob() {
-        return JobBuilder.newJob(ProxyLoadJob.class)
+        return JobBuilder.newJob(ProxyValidateJob.class)
                 .withIdentity(JOB_NAME_PROXY_VALIDATE, GROUP_NAME_PROXY)
                 .storeDurably()
                 .build();

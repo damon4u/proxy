@@ -26,9 +26,12 @@ spring:
             threadCount: 10
             threadPriority: 5
     job-store-type: MEMORY
-http:
-  timeoutSeconds: 
-    load: 10
+app:
+  http:
+    proxyLoadTimeout: 10
+    proxyValidateTimeout: 8
+    songLoadTimeout: 15
+     
       
     
 

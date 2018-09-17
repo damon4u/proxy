@@ -1,6 +1,7 @@
 package com.randall.proxy.loader;
 
 import com.randall.proxy.client.GitProxyClient;
+import com.randall.proxy.constant.HttpConfig;
 import com.randall.proxy.dao.ProxyDao;
 import com.randall.proxy.entity.Proxy;
 import org.apache.commons.collections.CollectionUtils;
@@ -10,7 +11,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import retrofit2.Response;
 
-import javax.annotation.Resource;
 import java.util.List;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
@@ -26,9 +26,7 @@ import java.util.concurrent.Executors;
 public class ProxyLoader {
     private static final Logger LOGGER = LoggerFactory.getLogger(ProxyLoader.class);
 
-    public static final int VALIDATE_TIMEOUT_SECONDS = 8;
-
-    @Resource
+    @Autowired
     private ProxyDao proxyDao;
     
     @Autowired
@@ -36,6 +34,9 @@ public class ProxyLoader {
     
     @Autowired
     private CommentLoader commentLoader;
+    
+    @Autowired
+    private HttpConfig httpConfig;
     
     public void loadProxy() throws Exception {
         loadFromGit();
@@ -53,9 +54,7 @@ public class ProxyLoader {
         if (CollectionUtils.isNotEmpty(proxyList)) {
             final CountDownLatch latch = new CountDownLatch(proxyList.size());
             ExecutorService executorService = Executors.newFixedThreadPool(5);
-            for (Proxy proxy : proxyList) {
-                executorService.execute(new FilterJob(proxy, latch));
-            }
+            proxyList.forEach(proxy -> executorService.execute(new FilterJob(proxy, latch)));
             try {
                 latch.await();
             } catch (InterruptedException e) {
@@ -81,7 +80,7 @@ public class ProxyLoader {
             try {
                 // 先只要http类型的
                 if (proxy.getProto().startsWith("http")
-                        && commentLoader.getSongInfo(209996, proxy, VALIDATE_TIMEOUT_SECONDS) != null) {
+                        && commentLoader.getSongInfo(209996, proxy, httpConfig.getProxyValidateTimeout()) != null) {
                     LOGGER.info("================> {}", proxy);
                     proxyDao.save(new Proxy(proxy.getIp(), proxy.getPort(), proxy.getProto()));
                 }
@@ -98,6 +97,7 @@ public class ProxyLoader {
         if (CollectionUtils.isNotEmpty(allProxy)) {
             final CountDownLatch latch = new CountDownLatch(allProxy.size());
             ExecutorService executorService = Executors.newFixedThreadPool(5);
+            allProxy.forEach(proxy -> executorService.execute(new ValidateJob(proxy, latch)));
             for (Proxy proxy : allProxy) {
                 executorService.execute(new ValidateJob(proxy, latch));
             }
@@ -124,7 +124,7 @@ public class ProxyLoader {
         @Override
         public void run() {
             try {
-                if (commentLoader.getSongInfo(209996, proxy, VALIDATE_TIMEOUT_SECONDS) == null) {
+                if (commentLoader.getSongInfo(209996, proxy, httpConfig.getProxyValidateTimeout()) == null) {
                     proxyDao.delete(proxy.getId());
                     LOGGER.error("disable proxy={}", proxy.getProxyStr());
                 }
