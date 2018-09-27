@@ -126,7 +126,7 @@ public class ProxyLoader {
             try {
                 if (commentLoader.getSongInfo(209996, proxy, httpConfig.getProxyValidateTimeout()) == null) {
                     proxyDao.delete(proxy.getId());
-                    LOGGER.error("disable proxy={}", proxy.getProxyStr());
+                    LOGGER.error("disable proxy={}", proxy);
                 }
             } catch (Exception e) {
                 LOGGER.error(e.getMessage());

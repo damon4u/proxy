@@ -18,14 +18,28 @@ import retrofit2.http.Query;
  */
 public interface MusicClient {
 
+    /**
+     * 获取歌曲信息
+     *
+     * @param songId 歌曲id
+     * @return 页面html
+     */
     @GET("song")
     @Headers("Referer: http://music.163.com/")
     Call<String> songInfo(@Query("id") long songId);
 
+    /**
+     * 获取评论信息
+     *
+     * @param songId    歌曲id
+     * @param params    加密params
+     * @param encSecKey 加密encSecKey
+     * @return 评论接口返回体
+     */
     @POST("weapi/v1/resource/comments/R_SO_4_{songId}/?csrf_token=d2c9e86c94efabcc4b5a1a6d757d417e")
     @FormUrlEncoded
     @Headers("Referer: http://music.163.com/")
     Call<CommentResponseBody> comment(@Path("songId") Long songId,
-                                       @Field("params") String params,
-                                       @Field("encSecKey") String encSecKey);
+                                      @Field("params") String params,
+                                      @Field("encSecKey") String encSecKey);
 }

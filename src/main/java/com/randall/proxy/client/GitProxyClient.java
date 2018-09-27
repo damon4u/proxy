@@ -14,6 +14,10 @@ import java.util.List;
  */
 public interface GitProxyClient {
 
+    /**
+     * 获取代理IP列表
+     * @return
+     */
     @GET("/stamparm/aux/master/fetch-some-list.txt")
     Call<List<Proxy>> loadProxy();
 }

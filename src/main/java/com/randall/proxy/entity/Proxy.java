@@ -12,14 +12,26 @@ import java.io.Serializable;
  */
 @Data
 public class Proxy implements Serializable {
-    
+
+    /**
+     * 主键id
+     */
     private int id;
 
+    /**
+     * ip地址或者域名
+     */
     private String ip;
-    
+
+    /**
+     * 端口号
+     */
     private int port;
-    
-    private String proto;      //http、https
+
+    /**
+     * 协议http、https、socks4等
+     */
+    private String proto;
     
     public Proxy() {}
 
@@ -29,7 +41,8 @@ public class Proxy implements Serializable {
         this.proto = proto.toLowerCase();
     }
 
-    public String getProxyStr() {
+    @Override
+    public String toString() {
         return proto + "://" + ip + ":" + port;
     }
 
